@@ -1,10 +1,15 @@
-import json
-from datetime import datetime, timedelta
+import csv
+import os
+import re
+import urllib
+import urllib.request
+from datetime import datetime
+from urllib.error import HTTPError
 
 import pandas as pd
-import math
-import csv
-from urllib.parse import urlencode
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class ExcelService:
@@ -61,16 +66,16 @@ class ExcelService:
             # message = urlencode({
             #     'message': f"{text}\n\n{title} - {date}\n\n{url}\n\n\n\n\n{hashtags}"
             result.append({
-                # 'UGS': ugs,
-                # 'title': title,
+                'UGS': ugs,
+                'title': title,
                 'text': text,
                 'hashtags': hashtags,
-                # 'url': url,
-                # 'imageUrl': image_url,
-                # 'date': date,
-                # 'year': year,
+                'url': url,
+                'imageUrl': image_url,
+                'date': date,
+                'year': year,
                 'publish_date': publish_date,
-                # 'item_type': item_type,
+                'item_type': item_type,
                 'published': published,
             })
             # })
@@ -105,19 +110,19 @@ class ExcelService:
 
     def get_by_date(self, content, date):
         filtered_data = self.remove_void_publish_date(content)
-        print("sans publish date", len(filtered_data))
+        # print("sans publish date", len(filtered_data))
 
         filtered_data = [item for item in filtered_data if
                          'publish_date' in item and isinstance(item['publish_date'], datetime)
                          and item['publish_date'].date() == date
                          ]
 
-        print("sans date au format string", len(filtered_data))
+        # print("sans date au format string", len(filtered_data))
 
         filtered_data = [item for item in filtered_data if
                          isinstance(item['publish_date'], datetime)
                          ]
-        print("sans date au format pas datetime", len(filtered_data))
+        # print("sans date au format pas datetime", len(filtered_data))
 
         filtered_data = [item for item in filtered_data if
                          isinstance(item['publish_date'], datetime)
@@ -128,3 +133,33 @@ class ExcelService:
         # 1 er vendredi d'octobre
 
         return filtered_data
+
+    def download_image_url(self, line):
+        image_url = line['imageUrl']
+        if line['imageUrl'].find('|') != -1:
+            image_url = line['imageUrl'].split('|')[0]
+
+        ugs = (re.sub(r'\s', '', line['UGS'])
+               .replace("_x000D_", " ")
+               .strip())
+        download_folder = os.getenv('DOWNLOAD_FOLDER')
+        filename = ugs + '.jpg'
+        try:
+            response = urllib.request.urlretrieve(image_url, download_folder + filename)
+        except HTTPError as e:
+            print(filename, "Error, HTTP Code is {}".format(e.code))
+
+        # print(response)
+        return line['imageUrl']
+
+    def get_hash_tags(self, hashtags):
+        # Not found
+        if hashtags.lower().find("#cappiello ") == -1:
+            hashtags = "#Cappiello" + " " + hashtags
+
+        if hashtags.lower().find("#leonettocappiello ") == -1:
+            hashtags = "#LeonettoCappiello" + " " + hashtags
+
+        if hashtags.lower().find("#vintageposter ") == -1:
+            hashtags = hashtags + " " + "#VintagePoster"
+        return hashtags
