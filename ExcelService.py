@@ -12,6 +12,49 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+def transform_source(source):
+    if "Salce" in source:
+        return source + " @museocollezionesalce"
+    if "Poster Auctions" in source:
+        return source + " @posterauctions"
+    if "gallica" in source:
+        return source + " @gallicabnf"
+    if "Musée Français de la Brasserie" in source:
+        return source + " @museefrancaisbrasserie"
+    if "Blanchet" in source:
+        return source + " @blanchet.associes"
+    if "Omnibus" in source:
+        return source + " @omnibusgallery"
+    if "Swann" in source:
+        return source + " @swanngalleries"
+    if "Musée des Beaux-Arts, Lyon" in source:
+        return source + " @mba_lyon"
+    if "Archives de Paris" in source:
+        return source + " @archivesdeparis"
+    if "Fitzroy" in source:
+        return source + " @thegaleriefitzroy"
+    if "Albertina" in source:
+        return source + " @albertinamuseum"
+    if "Bibliothèque de Genève" in source:
+        return source + " @bgegeneve"
+    if "Artcurial" in source:
+        return source + " @artcurial__"
+    if "Forney" in source:
+        return source + " @bibforney"
+    if "Musée des Arts Décoratifs" in source:
+        return source + " @madparis"
+    if "Carnavalet" in source:
+        return source + " @museecarnavalet"
+    if "Forney" in source:
+        return source + " @bibforney"
+    if "Victoria and Albert Museum" in source:
+        return source + " @vamuseum"
+    if "Musée des Beaux-Arts de Reims" in source:
+        return source + " @musees.reims"
+
+    return source  # Pas de changement si aucune règle ne s'applique
+
+
 class ExcelService:
     def read_excel(self, file_path):
         # Lire le fichier Excel et retourner sous forme de tableau
@@ -62,6 +105,17 @@ class ExcelService:
             publish_date = row['Date de publication']
             item_type = row['Type']
             published = row['Date Pub']
+            source = row['source']
+            dimensions_du_dessin_cm = row['dimensions_du_dessin_cm']
+            nombre_de_les = row['nombre_de_les']
+            remarques = row['Remarques']
+            matieres = (re.sub(r'\s', '', row['matieres'])
+                        .replace("_x000D_", " ")
+                        .strip())
+
+            support = row['support']
+            dimensions_hors_tout_cm = row['dimensions_hors_tout_cm']
+            reference_devambez = row['reference_devambez']
 
             # message = urlencode({
             #     'message': f"{text}\n\n{title} - {date}\n\n{url}\n\n\n\n\n{hashtags}"
@@ -77,6 +131,14 @@ class ExcelService:
                 'publish_date': publish_date,
                 'item_type': item_type,
                 'published': published,
+                'source': source,
+                'dimensions_du_dessin_cm': dimensions_du_dessin_cm,
+                'nombre_de_les': nombre_de_les,
+                'remarques': remarques,
+                'matieres': matieres,
+                'support': support,
+                'dimensions_hors_tout_cm': dimensions_hors_tout_cm,
+                'reference_devambez': reference_devambez,
             })
             # })
 
@@ -163,3 +225,9 @@ class ExcelService:
         if hashtags.lower().find("#vintageposter ") == -1:
             hashtags = hashtags + " " + "#VintagePoster"
         return hashtags
+
+    def setsource(self, data):
+        for row in data:
+            if 'source' in row:
+                row['source'] = transform_source(row['source'])
+        return data
