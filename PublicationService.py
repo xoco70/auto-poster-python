@@ -19,6 +19,7 @@ class PublicationService:
 if __name__ == "__main__":
     excel_service = ExcelService()
     data = excel_service.get_content()
+    data = excel_service.clean_content(data)
     # print(len(data))
     data = excel_service.remove_void_text(data)
     # print(len(data))
@@ -36,8 +37,8 @@ if __name__ == "__main__":
 
     # Get data by UGS
 
-    data = excel_service.select_ugs(data, "1899001Z0")
-
+    data = excel_service.select_ugs(data, "1913001E0")
+    # 1920070M0
     # print(len(data))
 
     # Get data by date
@@ -50,10 +51,11 @@ if __name__ == "__main__":
         print(line['text'])
         print(line['url'])
         image_url = excel_service.download_image_url(line)
-        if line['source'] and line['source'] != "Collection particulière" : print("Source: " + line['source'])
+        if line['source'] and line['source'] != "Collection particulière": print("Source: " + line['source'])
         if line['dimensions_du_dessin_cm']: print("Dimensions du dessin en cm: " + line['dimensions_du_dessin_cm'])
-        if line['nombre_de_les']: print("Nombre de lés: " + str(int(line['nombre_de_les'])))
-        if line['remarques']: print("Remarques: " + line['remarques'])
+        if line['nombre_de_les'] and float(line['nombre_de_les']) != 0:
+            print("Nombre de lés: " + str(int(float(line['nombre_de_les']))))
+            if line['remarques']: print("Remarques: " + line['remarques'])
         if line['matieres']: print("Matières: " + line['matieres'])
         if line['support']: print("Support: " + line['support'])
         if line['dimensions_hors_tout_cm']: print("Dimensions hors tout en cm: " + line['dimensions_hors_tout_cm'])

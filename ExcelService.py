@@ -197,22 +197,29 @@ class ExcelService:
         return filtered_data
 
     def download_image_url(self, line):
-        image_url = line['imageUrl']
-        if line['imageUrl'].find('|') != -1:
-            image_url = line['imageUrl'].split('|')[0]
-
-        ugs = (re.sub(r'\s', '', line['UGS'])
-               .replace("_x000D_", " ")
-               .strip())
-        download_folder = os.getenv('DOWNLOAD_FOLDER')
-        filename = ugs + '.jpg'
-        try:
-            response = urllib.request.urlretrieve(image_url, download_folder + filename)
-        except HTTPError as e:
-            print(filename, "Error, HTTP Code is {}".format(e.code))
+        image_urls = line['imageUrl'].split(',')
+        for image_url in image_urls:
+            image_url = image_url.strip()
+            ugs = (re.sub(r'\s', '', line['UGS'])
+                   .replace("_x000D_", " ")
+                   .strip())
+            download_folder = os.getenv('DOWNLOAD_FOLDER')
+            filename = ugs + '.jpg'
+            try:
+                response = urllib.request.urlretrieve(image_url, download_folder + filename)
+            except HTTPError as e:
+                print(filename, "Error, HTTP Code is {}".format(e.code))
 
         # print(response)
         return line['imageUrl']
+
+    def clean_content(self, records):
+        cleaned_records = []
+        for record in records:
+            cleaned_record = {key: ("" if pd.isna(value) else re.sub(r'_x000D_', ' ', str(value))) for key, value in
+                              record.items()}
+            cleaned_records.append(cleaned_record)
+        return cleaned_records
 
     def get_hash_tags(self, hashtags):
         # Not found
